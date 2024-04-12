@@ -4,7 +4,8 @@ from openai import OpenAI
 from pathlib import Path
 import spacy
 import requests
-from moviepy.editor import ImageSequenceClip, AudioFileClip
+
+from moviepy.editor import ImageSequenceClip, AudioFileClip, VideoFileClip
 
 # Load environment variables from .env file
 load_dotenv()
@@ -25,7 +26,7 @@ def generate_script(prompt):
     )
     return response.choices[0].message.content
 
-def extract_keywords(text, max_keywords=7):
+def extract_keywords(text, max_keywords=2):
     doc = nlp(text)
     # Extract nouns and proper nouns as potential keywords, limited to max_keywords
     keywords = [token.text for token in doc if token.pos_ in ['NOUN', 'PROPN']]
@@ -49,21 +50,21 @@ def download_image(url, path):
         print(f"Failed to download image. Status code: {response.status_code}")
 
 def generate_images(prompts):
-    directory_path = ''
-    create_directory_if_not_exists(directory_path)
+    # directory_path = 'path/to/your/directory'
+    # create_directory_if_not_exists(directory_path)
     image_paths = []
-    os.mkdir('temp/images/')
+    # os.mkdir('temp/images/')
     for i, prompt in enumerate(prompts):
         response = client.images.generate(
             model="dall-e-3",
             prompt=prompt,
-            size="1024x1024",
+            size="1024x1792",
             quality="standard",
             n=1
         )
         image_url = response.data[0].url
        
-        image_path = f"./temp/images/image_{i}.png"
+        image_path = f"image_{i}.png"
         download_image(image_url, image_path)
         image_paths.append(image_path)
     return image_paths
@@ -86,6 +87,21 @@ def create_directory_if_not_exists(directory_path):
         print(f"Directory '{directory_path}' was created.")
     else:
         print(f"Directory '{directory_path}' already exists.")
+
+
+# def crop_video(input_file, output_file, width, height):
+#     # Load the video clip
+#     video = VideoFileClip(input_file)
+    
+#     # Calculate center coordinates (assuming you want to center the crop)
+#     x_center = video.w / 2
+#     y_center = video.h / 2
+
+#     # Crop the video
+#     cropped_video = video.crop(x_center=x_center, y_center=y_center, width=width, height=height)
+    
+#     # Write the cropped video to a file
+#     cropped_video.write_videofile(output_file, codec='libx264')
 def main():
     script = generate_script("Write a trading motivational message 130 words")
     print("Generated Script:", script)
